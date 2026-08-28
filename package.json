@@ -5,6 +5,6 @@
   "scripts": {
     "frontend": "npm --prefix subtracker-frontend start",
     "backend": "npm --prefix subtracker-backend run dev",
-    "ai": "cd subtracker-AI && python3 -m uvicorn main:app --reload --port 8000"
+    "ai": "cd subtracker-AI && (.venv/bin/uvicorn main:app --reload --port 8000 || python3 -m uvicorn main:app --reload --port 8000)"
   }
 }

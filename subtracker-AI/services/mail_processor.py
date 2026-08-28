@@ -37,8 +37,13 @@ price_pattern = r"(?:₺|TL|TRY|USD|\$|€|tl|try|usd|eur)\s?\d{1,3}(?:[.,]\d{2}
 config = AutoConfig.from_pretrained("dbmdz/bert-base-turkish-cased", num_labels=3)
 model = AutoModelForSequenceClassification.from_config(config)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-checkpoint = torch.load("models/bert_model.pt", map_location=device, weights_only=False)
-model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+try:
+    checkpoint = torch.load("models/bert_model.pt", map_location=device, weights_only=False)
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("BERT model weights loaded successfully from models/bert_model.pt")
+except Exception as e:
+    print(f"Warning: Could not load models/bert_model.pt ({e}). Using base pretrained model as fallback.")
+
 model.to(device)
 model.eval()
 tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")

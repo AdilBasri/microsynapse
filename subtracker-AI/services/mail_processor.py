@@ -48,7 +48,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==== MongoDB Bağlantısı ====
-mongo_uri = os.getenv("AI_MONGO_URI") or os.getenv("MONGO_URI") or "mongodb+srv://subtracker:YRjMZwC2QxX0JoxQ@cluster0.q499x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_uri = os.getenv("MONGO_URI") or os.getenv("AI_MONGO_URI") or "mongodb+srv://subtracker:YRjMZwC2QxX0JoxQ@cluster0.q499x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(mongo_uri)
 db = client["subscription_db"]
 collection = db["mails"]

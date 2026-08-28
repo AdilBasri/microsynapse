@@ -7,6 +7,9 @@ module.exports = function(api) {
         moduleName: '@env',
         path: '.env',
       }],
-      'react-native-reanimated/plugin'],
+      '@babel/plugin-transform-private-methods',
+      '@babel/plugin-transform-class-properties',
+      'react-native-reanimated/plugin',
+    ],
   };
 };

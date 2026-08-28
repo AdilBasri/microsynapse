@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "frontend": "npm --prefix subtracker-frontend start",
-    "backend": "npm --prefix subtracker-backend dev",
-    "ai": "cd subtracker-AI && uvicorn main:app --reload --port 8000"
+    "backend": "npm --prefix subtracker-backend run dev",
+    "ai": "cd subtracker-AI && python3 -m uvicorn main:app --reload --port 8000"
   }
 }

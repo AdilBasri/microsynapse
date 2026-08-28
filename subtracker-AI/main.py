@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 from services.mail_processor import process_mails
 
 app = FastAPI()
@@ -7,6 +8,8 @@ app = FastAPI()
 class MailRequest(BaseModel):
     credentials: dict
     start_date: str
+    user_id: Optional[str] = None
+    userId: Optional[str] = None
 
 @app.get("/status")
 def status():
@@ -14,5 +17,6 @@ def status():
 
 @app.post("/process-mails")
 def process_user_mails(request: MailRequest):
-    count = process_mails(request.credentials, request.start_date)
+    uid = request.user_id or request.userId
+    count = process_mails(request.credentials, request.start_date, user_id=uid)
     return {"message": f"{count} adet mail işlendi ve veritabanına kaydedildi."}

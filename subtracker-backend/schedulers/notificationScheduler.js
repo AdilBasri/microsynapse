@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import subscriptionModel from "../model/subscriptionModel.js";
 import mailModel from "../model/mailModel.js";
+import userModel from "../model/usersModel.js";
 import { sendNotification } from "../services/notificationService.js";
 
 // Her gün gece yarısı çalışacak
@@ -30,9 +31,15 @@ cron.schedule("0 0 * * *", async () => {
         else if (sub.notifyDays <= 15) priority = "medium";
         else priority = "low";
 
-        if (sub.userId) {
+        let targetUserId = sub.userId;
+        if (!targetUserId && sub.mail_address) {
+          const user = await userModel.findOne({ email: sub.mail_address.toLowerCase() });
+          if (user) targetUserId = user._id;
+        }
+
+        if (targetUserId) {
           await sendNotification({
-            userId: sub.userId,
+            userId: targetUserId,
             subscriptionId: sub._id.toString(),
             title: `${sub.company_name} aboneliğiniz ${sub.notifyDays} gün sonra yenileniyor.`,
             body: `${sub.company_name} aboneliğiniz için hatırlatma: ${sub.notifyDays} gün kaldı.`,

@@ -11,6 +11,7 @@ from requests.exceptions import RequestException
 from datetime import datetime
 import statistics
 from dateutil import parser
+from bson.objectid import ObjectId
 
 # ==== Performans İzleme ====
 performance_stats = {
@@ -194,8 +195,9 @@ def process_single_mail(txt):
         print(f"Process error: {e}")
         return None
 
-def save_to_mongodb(emails, user_email):
+def save_to_mongodb(emails, user_email, user_id=None):
     operations = []
+    user_obj_id = ObjectId(str(user_id)) if (user_id and ObjectId.is_valid(str(user_id))) else None
     for mail in emails:
         if mail is None:
             continue
@@ -208,6 +210,7 @@ def save_to_mongodb(emails, user_email):
             except Exception:
                 parsed_date = None
         document = {
+            "userId": user_obj_id,
             "mail_address": user_email,
             "company_name": company_name,
             "price": mail['found_prices'][0] if mail['found_prices'] else None,
@@ -220,7 +223,7 @@ def save_to_mongodb(emails, user_email):
     if operations:
         collection.bulk_write(operations)
 
-def process_mails(credentials: dict, start_date: str):
+def process_mails(credentials: dict, start_date: str, user_id: str = None):
     for key in performance_stats:
         if isinstance(performance_stats[key], list):
             performance_stats[key] = []
@@ -246,7 +249,7 @@ def process_mails(credentials: dict, start_date: str):
             if result:
                 processed_mails.append(result)
 
-    save_to_mongodb(processed_mails, user_email)
+    save_to_mongodb(processed_mails, user_email, user_id=user_id)
     performance_stats["total_processing_time"] = time.time() - total_start
 
     print(f"Toplam işlem süresi: {performance_stats['total_processing_time']:.2f} saniye")

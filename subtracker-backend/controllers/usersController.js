@@ -286,7 +286,7 @@ const deleteUser = async (req, res) => {
 
     await SessionModel.deleteMany({ userId });
 
-    await mailModel.deleteMany({ email });
+    await mailModel.deleteMany({ $or: [{ userId }, { mail_address: email }] });
 
     await userModel.findByIdAndDelete(userId);
 

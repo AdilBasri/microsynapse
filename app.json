@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "419ea0e9-803d-43f4-a2c0-f5d5107200af"
+      }
+    },
+    "android": {
+      "package": "com.suregrandma.subtracker"
+    }
+  }
+}

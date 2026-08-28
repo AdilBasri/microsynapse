@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "plugins": [
+      "expo-notifications"
+    ],
+    "name": "subtracker-frontend",
+    "slug": "subtracker-frontend",
+    "owner": "subtracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "com.subtracker.subtrackerfrontend",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.subtracker.subtrackerfrontend",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "com.subtracker.subtrackerfrontend"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
+      "package": "com.subtracker.subtrackerfrontend",
+      "permissions": [
+        "INTERNET",
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "45389a3c-b9ea-4485-83c5-eed67c463d85"
+      }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/aff7e0dd-7078-4a0f-9d4b-db3faabaaadb"
+    }
+  }
+}

@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import zxcvbn from "zxcvbn";
+const zxcvbn = (pwd) => ({ score: !pwd ? 0 : pwd.length < 6 ? 1 : pwd.length < 9 ? 2 : pwd.length < 12 ? 3 : 4 });
 import { API_BASE_URL } from '@env';
 import privacyPolicy from '../texts/privacyPolicy';
 import kvkk from '../texts/kvkk';

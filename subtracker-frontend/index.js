@@ -1,13 +1,3 @@
-// Polyfill DOMException for React Native / Hermes environment
-if (typeof globalThis.DOMException === 'undefined') {
-  globalThis.DOMException = class DOMException extends Error {
-    constructor(message, name) {
-      super(message);
-      this.name = name || 'Error';
-    }
-  };
-}
-
 import { registerRootComponent } from 'expo';
 import App from './App';
 

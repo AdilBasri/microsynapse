@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CaptchaInput from '../context/CaptchaInput';
-import zxcvbn from 'zxcvbn';
+const zxcvbn = (pwd) => ({ score: !pwd ? 0 : pwd.length < 6 ? 1 : pwd.length < 9 ? 2 : pwd.length < 12 ? 3 : 4 });
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@env';
 

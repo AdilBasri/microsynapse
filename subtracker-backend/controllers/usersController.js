@@ -237,8 +237,9 @@ const saveGoogleCredentials = async (req, res) => {
     const start_date = new Date().toISOString().slice(0, 10);
 
     // Yapay zeka servisine istek at
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     const response = await axios.post(
-      "http://****:8000/process-mails",
+      `${aiServiceUrl}/process-mails`,
       {
         userId,
         credentials,

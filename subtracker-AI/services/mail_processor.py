@@ -42,8 +42,13 @@ model.to(device)
 model.eval()
 tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # ==== MongoDB Bağlantısı ====
-client = MongoClient("mongodb+srv://subtracker:YRjMZwC2QxX0JoxQ@cluster0.q499x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongo_uri = os.getenv("AI_MONGO_URI") or os.getenv("MONGO_URI") or "mongodb+srv://subtracker:YRjMZwC2QxX0JoxQ@cluster0.q499x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(mongo_uri)
 db = client["subscription_db"]
 collection = db["mails"]
 

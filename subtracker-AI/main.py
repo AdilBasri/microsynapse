@@ -8,6 +8,10 @@ class MailRequest(BaseModel):
     credentials: dict
     start_date: str
 
+@app.get("/status")
+def status():
+    return {"status": "AI Mail Processing API is running"}
+
 @app.post("/process-mails")
 def process_user_mails(request: MailRequest):
     count = process_mails(request.credentials, request.start_date)

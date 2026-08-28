@@ -53,9 +53,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==== MongoDB Bağlantısı ====
-mongo_uri = os.getenv("MONGO_URI") or os.getenv("AI_MONGO_URI") or "mongodb+srv://subtracker:YRjMZwC2QxX0JoxQ@cluster0.q499x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_uri = os.getenv("MONGO_URI") or os.getenv("AI_MONGO_URI")
 client = MongoClient(mongo_uri)
-db = client["subscription_db"]
+try:
+    db = client.get_default_database()
+except Exception:
+    db = client["subtracker"]
 collection = db["mails"]
 
 label_map = {0: "Abonelik Değil", 1: "Abonelik Başlangıcı", 2: "Abonelik Bitişi"}

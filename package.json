@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "frontend": "npm --prefix subtracker-frontend start",
+    "frontend": "cd subtracker-frontend && npx expo start -c",
     "backend": "npm --prefix subtracker-backend run dev",
     "ai": "cd subtracker-AI && (.venv/bin/uvicorn main:app --reload --port 8000 || python3 -m uvicorn main:app --reload --port 8000)"
   }

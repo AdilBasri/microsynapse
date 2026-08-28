@@ -2,7 +2,8 @@
   "expo": {
     "plugins": [
       "expo-notifications",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "name": "subtracker-frontend",
     "slug": "subtracker-frontend",

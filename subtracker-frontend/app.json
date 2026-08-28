@@ -12,7 +12,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "com.subtracker.subtrackerfrontend",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

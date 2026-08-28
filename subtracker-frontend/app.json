@@ -1,7 +1,8 @@
 {
   "expo": {
     "plugins": [
-      "expo-notifications"
+      "expo-notifications",
+      "@react-native-community/datetimepicker"
     ],
     "name": "subtracker-frontend",
     "slug": "subtracker-frontend",
@@ -35,7 +36,10 @@
           "data": {
             "scheme": "com.subtracker.subtrackerfrontend"
           },
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "com.subtracker.subtrackerfrontend",

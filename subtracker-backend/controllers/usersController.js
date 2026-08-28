@@ -313,14 +313,81 @@ const savePushToken = async (req, res) => {
   res.json({ status: true, message: "Push token kaydedildi." });
 };
 
+const initiateGoogleAuth = (req, res) => {
+  const userId = req.query.userId || req.userId || '';
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const scope = encodeURIComponent("https://www.googleapis.com/auth/gmail.readonly email profile");
+  
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&access_type=offline&prompt=consent&state=${userId}`;
+  
+  res.redirect(authUrl);
+};
+
+const handleGoogleCallback = async (req, res) => {
+  const { code, state: userId } = req.query;
+
+  if (!code) {
+    return res.status(400).send("<h1>Hata: Authorization code bulunamadı.</h1>");
+  }
+
+  try {
+    const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      grant_type: "authorization_code",
+    });
+
+    const tokens = tokenResponse.data;
+    const credentials = {
+      token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    };
+
+    if (userId) {
+      await userModel.findByIdAndUpdate(userId, { credentials });
+    }
+
+    const start_date = "2020-01-01";
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+
+    axios.post(
+      `${aiServiceUrl}/process-mails`,
+      {
+        userId: userId || undefined,
+        user_id: userId || undefined,
+        credentials,
+        start_date,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    ).catch(err => console.error("AI service trigger error:", err.message));
+
+    return res.send(
+      "<div style='font-family:sans-serif;text-align:center;padding:50px;'><h1 style='color:#4CAF50;'>Google İzniniz Başarıyla Alındı! 🎉</h1><p style='font-size:18px;color:#333;'>Abonelik mailleriniz taranıyor. Uygulamaya geri dönebilirsiniz.</p></div>"
+    );
+  } catch (error) {
+    console.error("handleGoogleCallback error:", error.response?.data || error.message);
+    return res.status(500).send(`<h1>Google Bağlantı Hatası</h1><pre>${JSON.stringify(error.response?.data || error.message, null, 2)}</pre>`);
+  }
+};
+
 export {
   createUser,
   loginUser,
   getUser,
   deleteUser,
   saveGoogleCredentials,
+  initiateGoogleAuth,
+  handleGoogleCallback,
   updateName,
   savePushToken,
   requestPasswordReset,
   resetPassword,
 };
+

@@ -192,12 +192,10 @@ function TabNavigator({ navigation, setAuthToken }) {
                   <Text style={styles.optionText}>ELLE EKLE</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  // Google ile ekle butonuna basınca boş bir html sayfasına yönlendir
                   onPress={() => {
                     setModalVisible(false);
-                    // Boş bir HTML sayfasına yönlendir
                     import('react-native').then(({ Linking }) => {
-                      Linking.openURL('https://www.google.com/blank.html');
+                      Linking.openURL('https://popular-erik-lobulate.ngrok-free.dev/auth/google');
                     });
                   }}
                   style={styles.googleOptionButton}

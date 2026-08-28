@@ -15,6 +15,8 @@ import {
   getUser,
   deleteUser,
   saveGoogleCredentials,
+  initiateGoogleAuth,
+  handleGoogleCallback,
   updateName,
   savePushToken,
   requestPasswordReset,
@@ -35,6 +37,9 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({ origin: "*" }));
+
+app.get("/auth/google", initiateGoogleAuth);
+app.get("/auth/google/callback", handleGoogleCallback);
 
 app.post("/user/create", createUser);
 app.post("/user/login", loginUser);

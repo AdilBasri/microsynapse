@@ -282,13 +282,30 @@ def is_valid_subscription(mail):
         return False
 
     body_text = mail.get('body_text', '')
+    body_lower = body_text.lower()
 
+    # 1. Olumsuz Kategori, Piyasa/Banka Bültenleri & Uzun Makroekonomi Raporları
     negative_terms = [
         "halka arz", "talep toplama", "e-ekstre", "dönem borcu", "asgari ödeme tutarı",
         "kartınıza ait", "bist100", "bist-tüm", "piyasa bülteni", "favori bülten",
-        "steam kütüphanenize", "puan dükkânı", "konsorsiyum", "hisse senedi"
+        "steam kütüphanenize", "puan dükkânı", "konsorsiyum", "hisse senedi",
+        "makroekonomi", "şirket haberleri", "sektör haberleri", "günlük piyasa",
+        "ekonomik bülten", "veri takvimi", "tcmb", "aracılık hizmetleri"
     ]
-    if any(term in body_text.lower() for term in negative_terms):
+    if any(term in body_lower for term in negative_terms):
+        return False
+
+    # 2. Pazarlama / İndirim / Teklif Davetleri (Promotional / Discount Invites)
+    promo_terms = [
+        "tasarruf et", "kaçırma", "üyelik al", "hemen üye ol", "teklif yarın yok",
+        "fırsatı kaçırma", "ilk 3 ay ücretsiz", "3 ay ücretsiz", "ücretsiz dene",
+        "ücretsiz deneme", "hediye et", "katılmaya davet", "davet et"
+    ]
+    if any(term in body_lower for term in promo_terms):
+        return False
+
+    # 3. Uzun Metin Koruması (Borsa bülteni / analiz raporu vs. > 1200 karakter)
+    if len(body_text) > 1200 and not any(kw in body_lower for kw in ["yenilenecek", "aboneliğiniz başladı", "faturanız kesildi"]):
         return False
 
     if mail.get('subscription_status') == 0:
@@ -311,8 +328,6 @@ def is_valid_subscription(mail):
     found_dates = mail.get('found_dates')
     if not found_dates or len(found_dates) == 0 or not found_dates[0]:
         return False
-
-    return True
 
     return True
 

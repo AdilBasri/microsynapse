@@ -53,6 +53,8 @@ config = AutoConfig.from_pretrained(MODEL_NAME, num_labels=NUM_LABELS)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=config).to(device)
 optimizer = AdamW(model.parameters(), lr=LR)
 
+best_acc = 0.0
+
 for epoch in range(EPOCHS):
     model.train()
     total_loss = 0
@@ -73,8 +75,14 @@ for epoch in range(EPOCHS):
             preds = torch.argmax(model(**batch).logits, dim=1)
             correct += (preds == batch["labels"]).sum().item()
             total += len(batch["labels"])
-    print(f"  Val accuracy: {correct/total:.3f}")
+    val_acc = correct / total
+    print(f"  Val accuracy: {val_acc:.3f}")
 
-os.makedirs("models", exist_ok=True)
-torch.save({"model_state_dict": model.state_dict()}, OUTPUT_PATH)
+    if val_acc > best_acc:
+        best_acc = val_acc
+        os.makedirs("models", exist_ok=True)
+        torch.save({"model_state_dict": model.state_dict()}, OUTPUT_PATH)
+        print(f"  → Yeni en iyi model kaydedildi (val_acc: {val_acc:.3f})")
+
+print(f"\nEğitim tamamlandı. En iyi val accuracy: {best_acc:.3f}")
 print("Kaydedildi:", OUTPUT_PATH)

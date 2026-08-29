@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.exceptions import RequestException
 from datetime import datetime
 import html
+import statistics
 from dateutil import parser
 from bson.objectid import ObjectId
 

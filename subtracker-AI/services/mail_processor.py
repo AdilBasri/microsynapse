@@ -227,7 +227,7 @@ def process_single_mail(txt):
         subscription_period = detect_subscription_period(body)
         prediction = predict_mail(body)
 
-        if prediction == 0 and extracted['prices'] and extracted['dates'] and has_strong_signal(body):
+        if prediction == 0 and extracted['prices'] and extracted['dates'] and (has_strong_signal(body) or has_explicit_receipt_or_billing_signal(body.lower())):
             prediction = 1
 
         if prediction != 0:
@@ -277,12 +277,24 @@ def price_near_subscription_term(body, price_str, window=120):
     terms = ["aylık", "/ay", "yıllık", "/yıl", "üyelik ücreti", "abonelik ücreti", "faturalandırıl", "fatura", "ödemeniz alındı", "yenileme", "yenilenecek", "planı", "öğrenci planı", "aile planı", "premium"]
     return any(t in context for t in terms)
 
+def has_explicit_receipt_or_billing_signal(body_lower):
+    billing_keywords = [
+        "faturanıza", "faturanız", "faturası", "otomatik olarak tahsil",
+        "otomatik tahsil", "otomatik yenile", "yenilenecek", "aboneliğiniz başladı",
+        "üyeliğiniz başladı", "faturanız kesildi", "ödeme alındı", "ödemeniz alındı",
+        "siparişin için teşekkür", "makbuzunu ekte", "üyelik ücretinin",
+        "satın alınanlar ve üyelikler", "üyeliğinizi iptal edebilirsiniz",
+        "planınızın ayda", "fiyatını, ayda"
+    ]
+    return any(kw in body_lower for kw in billing_keywords)
+
 def is_valid_subscription(mail):
     if not mail:
         return False
 
     body_text = mail.get('body_text', '')
     body_lower = body_text.lower()
+    has_billing = has_explicit_receipt_or_billing_signal(body_lower)
 
     # 1. Olumsuz Kategori, Piyasa/Banka Bültenleri & Uzun Makroekonomi Raporları
     negative_terms = [
@@ -292,43 +304,55 @@ def is_valid_subscription(mail):
         "makroekonomi", "şirket haberleri", "sektör haberleri", "günlük piyasa",
         "ekonomik bülten", "veri takvimi", "tcmb", "aracılık hizmetleri"
     ]
-    if any(term in body_lower for term in negative_terms):
-        return False
+    for term in negative_terms:
+        if term in body_lower and not has_billing:
+            print(f"REJECT [negative_term={term}] | body={body_text[:100]!r}")
+            return False
 
     # 2. Pazarlama / İndirim / Teklif Davetleri (Promotional / Discount Invites)
     promo_terms = [
-        "tasarruf et", "kaçırma", "üyelik al", "hemen üye ol", "teklif yarın yok",
-        "fırsatı kaçırma", "ilk 3 ay ücretsiz", "3 ay ücretsiz", "ücretsiz dene",
-        "ücretsiz deneme", "hediye et", "katılmaya davet", "davet et"
+        "tasarruf et", "kaçırma", "hemen üye ol", "teklif yarın yok",
+        "fırsatı kaçırma", "ücretsiz dene", "ücretsiz deneme", "katılmaya davet"
     ]
-    if any(term in body_lower for term in promo_terms):
+    for term in promo_terms:
+        if term in body_lower and not has_billing:
+            print(f"REJECT [promo_term={term}] | body={body_text[:100]!r}")
+            return False
+
+    # 3. Uzun Metin Kontrolü (Sadece fatura/makbuz sinyali İÇERMEYEN mailler için >2500)
+    if len(body_text) > 2500 and not has_billing:
+        print(f"REJECT [long_body={len(body_text)}] | body={body_text[:100]!r}")
         return False
 
-    # 3. Uzun Metin Koruması (Borsa bülteni / analiz raporu vs. > 1200 karakter)
-    if len(body_text) > 1200 and not any(kw in body_lower for kw in ["yenilenecek", "aboneliğiniz başladı", "faturanız kesildi"]):
-        return False
-
-    if mail.get('subscription_status') == 0:
+    if mail.get('subscription_status') == 0 and not has_billing:
+        print(f"REJECT [label=0_no_billing] | body={body_text[:100]!r}")
         return False
 
     company_name = mail.get('company_name') or parse_from_field(mail.get('from', ''))[0]
     if not company_name or len(company_name.strip()) < 2:
+        print(f"REJECT [invalid_company={company_name}]")
         return False
 
     found_prices = mail.get('found_prices')
     if not found_prices or len(found_prices) == 0:
-        return False
-    parsed_price = parse_price_value(found_prices[0])
-    if parsed_price is None or parsed_price <= 0:
+        print(f"REJECT [no_prices] | body={body_text[:100]!r}")
         return False
 
-    if not price_near_subscription_term(body_text, found_prices[0]):
+    parsed_price = parse_price_value(found_prices[0])
+    if parsed_price is None or parsed_price <= 0:
+        print(f"REJECT [invalid_price={found_prices[0]}]")
+        return False
+
+    if not price_near_subscription_term(body_text, found_prices[0]) and not has_billing:
+        print(f"REJECT [price_not_near_term] | price={found_prices[0]}")
         return False
 
     found_dates = mail.get('found_dates')
     if not found_dates or len(found_dates) == 0 or not found_dates[0]:
+        print(f"REJECT [no_dates] | body={body_text[:100]!r}")
         return False
 
+    print(f"ACCEPT [company={company_name} | price={parsed_price} | date={found_dates[0]}]")
     return True
 
 def save_to_mongodb(emails, user_email, user_id=None):

@@ -241,6 +241,7 @@ def process_single_mail(txt):
         return {
             'from': sender,
             'company_name': company_name,
+            'body_text': body,
             'found_dates': extracted['dates'],
             'found_prices': extracted['prices'],
             'subscription_status': prediction,
@@ -266,8 +267,28 @@ def parse_price_value(price_str):
     except Exception:
         return None
 
+def price_near_subscription_term(body, price_str, window=120):
+    if not price_str or not body:
+        return True
+    idx = body.find(str(price_str))
+    if idx == -1:
+        return True
+    context = body[max(0, idx - window):min(len(body), idx + window)].lower()
+    terms = ["aylık", "/ay", "yıllık", "/yıl", "üyelik ücreti", "abonelik ücreti", "faturalandırıl", "fatura", "ödemeniz alındı", "yenileme", "yenilenecek", "planı", "öğrenci planı", "aile planı", "premium"]
+    return any(t in context for t in terms)
+
 def is_valid_subscription(mail):
     if not mail:
+        return False
+
+    body_text = mail.get('body_text', '')
+
+    negative_terms = [
+        "halka arz", "talep toplama", "e-ekstre", "dönem borcu", "asgari ödeme tutarı",
+        "kartınıza ait", "bist100", "bist-tüm", "piyasa bülteni", "favori bülten",
+        "steam kütüphanenize", "puan dükkânı", "konsorsiyum", "hisse senedi"
+    ]
+    if any(term in body_text.lower() for term in negative_terms):
         return False
 
     if mail.get('subscription_status') == 0:
@@ -284,9 +305,14 @@ def is_valid_subscription(mail):
     if parsed_price is None or parsed_price <= 0:
         return False
 
+    if not price_near_subscription_term(body_text, found_prices[0]):
+        return False
+
     found_dates = mail.get('found_dates')
     if not found_dates or len(found_dates) == 0 or not found_dates[0]:
         return False
+
+    return True
 
     return True
 

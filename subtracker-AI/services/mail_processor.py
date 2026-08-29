@@ -222,6 +222,10 @@ def process_single_mail(txt):
         if prediction != 0:
             print(f"DEBUG label={prediction} | prices={extracted['prices']} | dates={extracted['dates']} | body_sample={body[:200]!r}")
 
+        known_brands = ["netflix", "spotify", "youtube", "amazon", "disney", "icloud", "google one", "microsoft", "adobe", "playstation", "xbox"]
+        if any(b in body.lower() for b in known_brands):
+            print(f"MARKA TESPİT | label={prediction} | prices={extracted['prices']} | dates={extracted['dates']} | body_sample={body[:200]!r}")
+
         company_name, _ = parse_from_field(sender)
         return {
             'from': sender,

@@ -43,8 +43,8 @@ def log_performance(stage, start_time):
     return duration
 
 # ==== Regex Patternleri ====
-date_pattern = r"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b|\b\d{1,2} [A-Za-zçğıöşüÇĞİÖŞÜ]+ \d{4}\b"
-price_pattern = r"(?:₺|TL|TRY|USD|\$|€|tl|try|usd|eur)\s?\d{1,3}(?:[.,]\d{2})?|\d{1,3}(?:[.,]\d{2})?\s?(?:₺|TL|TRY|USD|\$|€|tl|try|usd|eur)"
+date_pattern = r"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b|\b\d{1,2}\s+[A-Za-zçğıöşüÇĞİÖŞÜ]+\s+\d{4}\b"
+price_pattern = r"(?:₺|TL|TRY|USD|\$|€|EUR|tl|try|usd|eur)\s?\d{1,6}(?:[.,]\d{2})?|\d{1,6}(?:[.,]\d{2})?\s?(?:₺|TL|TRY|USD|\$|€|EUR|tl|try|usd|eur)"
 
 # ==== Model ve Tokenizer Yükleme ====
 config = AutoConfig.from_pretrained("dbmdz/bert-base-turkish-cased", num_labels=3)
@@ -202,7 +202,8 @@ def process_single_mail(txt):
 
         html_start = time.time()
         soup = BeautifulSoup(decoded_data, "html.parser")
-        body = soup.get_text()
+        raw_text = soup.get_text(separator=' ')
+        body = re.sub(r'\s+', ' ', raw_text).strip()
         body = remove_urls(body)
         log_performance("html_processing_times", html_start)
 
@@ -217,6 +218,9 @@ def process_single_mail(txt):
 
         subscription_period = detect_subscription_period(body)
         prediction = predict_mail(body)
+
+        if prediction != 0:
+            print(f"DEBUG label={prediction} | prices={extracted['prices']} | dates={extracted['dates']} | body_sample={body[:200]!r}")
 
         company_name, _ = parse_from_field(sender)
         return {

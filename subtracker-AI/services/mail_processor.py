@@ -179,6 +179,7 @@ def process_single_mail(txt):
 
         subject = next((h['value'] for h in headers if h['name'] == 'Subject'), "")
         sender = next((h['value'] for h in headers if h['name'] == 'From'), "")
+        date_header = next((h['value'] for h in headers if h['name'].lower() == 'date'), None)
 
         parts = payload.get('parts')
         data = None
@@ -206,6 +207,14 @@ def process_single_mail(txt):
         log_performance("html_processing_times", html_start)
 
         extracted = extract_info(body)
+
+        if not extracted['dates'] and date_header:
+            try:
+                parsed_hdr_date = parser.parse(date_header).strftime("%Y-%m-%d")
+                extracted['dates'] = [parsed_hdr_date]
+            except Exception:
+                pass
+
         subscription_period = detect_subscription_period(body)
         prediction = predict_mail(body)
 

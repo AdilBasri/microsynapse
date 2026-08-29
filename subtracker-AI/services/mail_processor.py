@@ -340,12 +340,28 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
         fetched_mails = list(executor.map(lambda mid: fetch_single_mail(creds, mid), msg_ids))
     print(f"6: {len(fetched_mails)} mail çekildi, sınıflandırma başlatılıyor...")
     processed_mails = []
+    rejected_no_keyword = 0
+    rejected_by_filter = 0
+    label_counts = {0: 0, 1: 0, 2: 0}
+
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(process_single_mail, mail) for mail in fetched_mails if mail]
         for future in as_completed(futures):
             result = future.result()
+            if result is None:
+                rejected_no_keyword += 1
+                continue
+            status_label = result.get('subscription_status', -1)
+            label_counts[status_label] = label_counts.get(status_label, 0) + 1
             if is_valid_subscription(result):
                 processed_mails.append(result)
+            else:
+                rejected_by_filter += 1
+
+    print(f"6b: keyword filtresinde elenen: {rejected_no_keyword}")
+    print(f"6c: sınıflandırma dağılımı: {label_counts}")
+    print(f"6d: is_valid_subscription'da elenen: {rejected_by_filter}")
+    print(f"6e: geçerli kabul edilen: {len(processed_mails)}")
 
     save_to_mongodb(processed_mails, user_email, user_id=user_id)
     performance_stats["total_processing_time"] = time.time() - total_start

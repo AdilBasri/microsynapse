@@ -12,9 +12,15 @@ from services.auth import gmail_authenticate
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.exceptions import RequestException
 from datetime import datetime
-import statistics
+import html
 from dateutil import parser
 from bson.objectid import ObjectId
+
+strong_subscription_signals = ["üyelik", "abonelik", "aylık", "/ay", "yıllık", "fatura", "premium", "plan"]
+
+def has_strong_signal(text):
+    text_lower = text.lower()
+    return sum(1 for s in strong_subscription_signals if s in text_lower) >= 2
 
 _thread_local = threading.local()
 
@@ -197,6 +203,7 @@ def process_single_mail(txt):
             return None
 
         decoded_data = base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+        decoded_data = html.unescape(decoded_data)
         if not contains_subscription_keywords(decoded_data):
             return None
 
@@ -218,6 +225,9 @@ def process_single_mail(txt):
 
         subscription_period = detect_subscription_period(body)
         prediction = predict_mail(body)
+
+        if prediction == 0 and extracted['prices'] and extracted['dates'] and has_strong_signal(body):
+            prediction = 1
 
         if prediction != 0:
             print(f"DEBUG label={prediction} | prices={extracted['prices']} | dates={extracted['dates']} | body_sample={body[:200]!r}")

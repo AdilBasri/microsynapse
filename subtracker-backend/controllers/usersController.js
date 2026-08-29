@@ -355,6 +355,8 @@ const handleGoogleCallback = async (req, res) => {
     const start_date = "2020-01-01";
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
+    console.log("AI servisine gönderilen payload:", JSON.stringify({ userId, credentials, start_date }, null, 2));
+
     axios.post(
       `${aiServiceUrl}/process-mails`,
       {
@@ -366,7 +368,7 @@ const handleGoogleCallback = async (req, res) => {
       {
         headers: { "Content-Type": "application/json" },
       }
-    ).catch(err => console.error("AI service trigger error:", err.message));
+    ).catch(err => console.error("AI service trigger error:", err.response?.data || err.message || err));
 
     return res.send(
       "<div style='font-family:sans-serif;text-align:center;padding:50px;'><h1 style='color:#4CAF50;'>Google İzniniz Başarıyla Alındı! 🎉</h1><p style='font-size:18px;color:#333;'>Abonelik mailleriniz taranıyor. Uygulamaya geri dönebilirsiniz.</p></div>"

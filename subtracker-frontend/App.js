@@ -191,11 +191,29 @@ function TabNavigator({ navigation, setAuthToken }) {
                 >
                   <Text style={styles.optionText}>ELLE EKLE</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
+                  onPress={async () => {
                     setModalVisible(false);
+                    let userIdParam = '';
+                    try {
+                      const token = await AsyncStorage.getItem('token');
+                      if (token) {
+                        const base64Payload = token.split('.')[1];
+                        const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonPayload = decodeURIComponent(
+                          atob(base64)
+                            .split('')
+                            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                            .join('')
+                        );
+                        const decoded = JSON.parse(jsonPayload);
+                        userIdParam = decoded.userId || decoded.id || '';
+                      }
+                    } catch (e) {
+                      console.error('Token parse hatası:', e);
+                    }
+                    const authUrl = `https://popular-erik-lobulate.ngrok-free.dev/auth/google${userIdParam ? `?userId=${userIdParam}` : ''}`;
                     import('react-native').then(({ Linking }) => {
-                      Linking.openURL('https://popular-erik-lobulate.ngrok-free.dev/auth/google');
+                      Linking.openURL(authUrl);
                     });
                   }}
                   style={styles.googleOptionButton}

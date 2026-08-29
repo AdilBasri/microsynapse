@@ -7,7 +7,7 @@ import httplib2
 from google_auth_httplib2 import AuthorizedHttp
 from bs4 import BeautifulSoup
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
-from pymongo import MongoClient, InsertOne
+from pymongo import MongoClient, InsertOne, UpdateOne
 from services.auth import gmail_authenticate
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.exceptions import RequestException
@@ -234,16 +234,31 @@ def save_to_mongodb(emails, user_email, user_id=None):
                 parsed_date = parser.parse(raw_date, dayfirst=True)
             except Exception:
                 parsed_date = None
-        document = {
+
+        filter_query = {
             "userId": user_obj_id,
+            "company_name": company_name
+        } if user_obj_id else {
             "mail_address": user_email,
-            "company_name": company_name,
-            "price": mail['found_prices'][0] if mail['found_prices'] else None,
-            "date": parsed_date,
-            "mail_type": label_map[mail['subscription_status']],
-            "aylık_yıllık": mail['subscription_period']
+            "company_name": company_name
         }
-        operations.append(InsertOne(document))
+
+        update_doc = {
+            "$set": {
+                "userId": user_obj_id,
+                "mail_address": user_email,
+                "company_name": company_name,
+                "price": mail['found_prices'][0] if mail['found_prices'] else None,
+                "date": parsed_date,
+                "mail_type": label_map[mail['subscription_status']],
+                "aylık_yıllık": mail['subscription_period'],
+                "updatedAt": datetime.now()
+            },
+            "$setOnInsert": {
+                "createdAt": datetime.now()
+            }
+        }
+        operations.append(UpdateOne(filter_query, update_doc, upsert=True))
 
     if operations:
         collection.bulk_write(operations)

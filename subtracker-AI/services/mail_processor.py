@@ -241,11 +241,15 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
     total_start = time.time()
     print(f"\n===== YENİ İŞLEM BAŞLADI: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} =====")
 
+    print("1: gmail_authenticate çağrılıyor...")
     service = gmail_authenticate(credentials)
+    print("2: authenticate tamamlandı, getProfile çağrılıyor...")
     profile = service.users().getProfile(userId='me').execute()
+    print("3: getProfile tamamlandı, email:", profile['emailAddress'])
     user_email = profile['emailAddress']
 
     messages = get_emails(service, start_date)
+    print("4: get_emails tamamlandı, mesaj sayısı:", len(messages))
     msg_ids = [msg['id'] for msg in messages]
 
     fetched_mails = [fetch_single_mail(service, msg_id) for msg_id in msg_ids]

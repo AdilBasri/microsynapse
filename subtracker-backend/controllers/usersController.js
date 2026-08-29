@@ -352,7 +352,7 @@ const handleGoogleCallback = async (req, res) => {
       await userModel.findByIdAndUpdate(userId, { credentials });
     }
 
-    const start_date = "2020-01-01";
+    const start_date = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
     console.log("AI servisine gönderilen payload:", JSON.stringify({ userId, credentials, start_date }, null, 2));

@@ -252,7 +252,10 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
     print("4: get_emails tamamlandı, mesaj sayısı:", len(messages))
     msg_ids = [msg['id'] for msg in messages]
 
-    fetched_mails = [fetch_single_mail(service, msg_id) for msg_id in msg_ids]
+    print("5: Mailler paralel çekiliyor...")
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        fetched_mails = list(executor.map(lambda mid: fetch_single_mail(service, mid), msg_ids))
+    print(f"6: {len(fetched_mails)} mail çekildi, sınıflandırma başlatılıyor...")
     processed_mails = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(process_single_mail, mail) for mail in fetched_mails if mail]

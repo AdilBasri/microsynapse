@@ -218,8 +218,10 @@ def process_single_mail(txt):
         subscription_period = detect_subscription_period(body)
         prediction = predict_mail(body)
 
+        company_name, _ = parse_from_field(sender)
         return {
             'from': sender,
+            'company_name': company_name,
             'found_dates': extracted['dates'],
             'found_prices': extracted['prices'],
             'subscription_status': prediction,
@@ -228,6 +230,46 @@ def process_single_mail(txt):
     except Exception as e:
         print(f"Process error: {e}")
         return None
+
+def parse_price_value(price_str):
+    if not price_str:
+        return None
+    try:
+        cleaned = re.sub(r"[^\d.,]", "", str(price_str))
+        if not cleaned:
+            return None
+        if "," in cleaned and "." not in cleaned:
+            cleaned = cleaned.replace(",", ".")
+        elif "," in cleaned and "." in cleaned:
+            cleaned = cleaned.replace(".", "").replace(",", ".")
+        val = float(cleaned)
+        return val if val > 0 else None
+    except Exception:
+        return None
+
+def is_valid_subscription(mail):
+    if not mail:
+        return False
+
+    if mail.get('subscription_status') == 0:
+        return False
+
+    company_name = mail.get('company_name') or parse_from_field(mail.get('from', ''))[0]
+    if not company_name or len(company_name.strip()) < 2:
+        return False
+
+    found_prices = mail.get('found_prices')
+    if not found_prices or len(found_prices) == 0:
+        return False
+    parsed_price = parse_price_value(found_prices[0])
+    if parsed_price is None or parsed_price <= 0:
+        return False
+
+    found_dates = mail.get('found_dates')
+    if not found_dates or len(found_dates) == 0 or not found_dates[0]:
+        return False
+
+    return True
 
 def save_to_mongodb(emails, user_email, user_id=None):
     operations = []
@@ -302,7 +344,7 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
         futures = [executor.submit(process_single_mail, mail) for mail in fetched_mails if mail]
         for future in as_completed(futures):
             result = future.result()
-            if result:
+            if is_valid_subscription(result):
                 processed_mails.append(result)
 
     save_to_mongodb(processed_mails, user_email, user_id=user_id)

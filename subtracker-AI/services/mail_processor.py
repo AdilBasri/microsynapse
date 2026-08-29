@@ -2,6 +2,9 @@ import base64
 import re
 import torch
 import time
+import threading
+import httplib2
+from google_auth_httplib2 import AuthorizedHttp
 from bs4 import BeautifulSoup
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
 from pymongo import MongoClient, InsertOne
@@ -12,6 +15,16 @@ from datetime import datetime
 import statistics
 from dateutil import parser
 from bson.objectid import ObjectId
+
+_thread_local = threading.local()
+
+def get_thread_service(base_credentials):
+    if not hasattr(_thread_local, "service"):
+        from googleapiclient.discovery import build
+        authed_http = AuthorizedHttp(base_credentials, http=httplib2.Http(timeout=30))
+        _thread_local.service = build('gmail', 'v1', http=authed_http)
+    return _thread_local.service
+
 
 # ==== Performans İzleme ====
 performance_stats = {
@@ -144,14 +157,18 @@ def get_emails(service, start_date):
 
     return mails
 
-def fetch_single_mail(service, msg_id):
+def fetch_single_mail(creds_or_service, msg_id):
     fetch_start = time.time()
     try:
+        if hasattr(creds_or_service, "token"):
+            service = get_thread_service(creds_or_service)
+        else:
+            service = creds_or_service
         message = service.users().messages().get(userId='me', id=msg_id).execute()
         log_performance("mail_fetch_times", fetch_start)
         return message
     except Exception as e:
-        print(f"Fetch error: {e}")
+        print(f"Fetch error ({msg_id}): {e}")
         log_performance("mail_fetch_times", fetch_start)
         return None
 
@@ -242,7 +259,7 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
     print(f"\n===== YENİ İŞLEM BAŞLADI: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} =====")
 
     print("1: gmail_authenticate çağrılıyor...")
-    service = gmail_authenticate(credentials)
+    service, creds = gmail_authenticate(credentials)
     print("2: authenticate tamamlandı, getProfile çağrılıyor...")
     profile = service.users().getProfile(userId='me').execute()
     print("3: getProfile tamamlandı, email:", profile['emailAddress'])
@@ -252,9 +269,9 @@ def process_mails(credentials: dict, start_date: str, user_id: str = None):
     print("4: get_emails tamamlandı, mesaj sayısı:", len(messages))
     msg_ids = [msg['id'] for msg in messages]
 
-    print("5: Mailler paralel çekiliyor...")
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        fetched_mails = list(executor.map(lambda mid: fetch_single_mail(service, mid), msg_ids))
+    print("5: Mailler paralel çekiliyor (thread-safe, 5 workers)...")
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        fetched_mails = list(executor.map(lambda mid: fetch_single_mail(creds, mid), msg_ids))
     print(f"6: {len(fetched_mails)} mail çekildi, sınıflandırma başlatılıyor...")
     processed_mails = []
     with ThreadPoolExecutor(max_workers=10) as executor:

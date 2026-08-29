@@ -15,4 +15,4 @@ def gmail_authenticate(user_credentials):
     )
 
     service = build('gmail', 'v1', credentials=creds)
-    return service
+    return service, creds

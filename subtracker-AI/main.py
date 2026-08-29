@@ -19,4 +19,6 @@ def status():
 def process_user_mails(request: MailRequest):
     uid = request.user_id or request.userId
     count = process_mails(request.credentials, request.start_date, user_id=uid)
-    return {"message": f"{count} adet mail işlendi ve veritabanına kaydedildi."}
+    if count == 0:
+        return {"status": "empty", "message": "Mailinize bağlı abonelik bulunamadı.", "count": 0}
+    return {"status": "success", "message": f"{count} abonelik bulundu.", "count": count}

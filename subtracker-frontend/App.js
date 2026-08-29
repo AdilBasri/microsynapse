@@ -191,6 +191,7 @@ function TabNavigator({ navigation, setAuthToken }) {
                 >
                   <Text style={styles.optionText}>ELLE EKLE</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
                   onPress={async () => {
                     setModalVisible(false);
                     let userIdParam = '';

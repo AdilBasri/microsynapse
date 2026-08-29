@@ -37,7 +37,7 @@ export const SubscriptionProvider = ({ children }) => {
           id: sub._id,
           name: sub.company_name,
           price: sub.price + " / ay",
-          nextPayment: sub.date.split("T")[0],
+          nextPayment: sub.date ? sub.date.split("T")[0] : null,
           duration: "1 Ay",
           category: sub.category || sub.subs_type || "-",
           subs_type: sub.subs_type || "",

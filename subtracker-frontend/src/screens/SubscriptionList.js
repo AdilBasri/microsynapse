@@ -53,16 +53,17 @@ export function SubscriptionList() {
   );
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "Tarih Belirsiz";
     const [year, month, day] = dateStr.split("-");
-    return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+    return `${(day || '').padStart(2, '0')}.${(month || '').padStart(2, '0')}.${year || ''}`;
   };
 
   const sortedSubscriptions = filteredSubscriptions.sort((a, b) => {
-    if (sortBy === "name") return a.name.localeCompare(b.name);
-    if (sortBy === "date") return new Date(a.nextPayment) - new Date(b.nextPayment);
+    if (sortBy === "name") return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === "date") return new Date(a.nextPayment || '1970-01-01') - new Date(b.nextPayment || '1970-01-01');
     if (sortBy === "price")
-      return parseFloat(a.price.replace("₺ / ay", "").replace(",", ".")) -
-        parseFloat(b.price.replace("₺ / ay", "").replace(",", "."));
+      return parseFloat((a.price || '0').replace("₺ / ay", "").replace(",", ".")) -
+        parseFloat((b.price || '0').replace("₺ / ay", "").replace(",", "."));
     return 0;
   });
 

@@ -31,11 +31,13 @@ export default function SubscriptionCalendar() {
   const { subscriptions, fetchSubscriptions } = useContext(SubscriptionContext);
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "Tarih Belirsiz";
     const [year, month, day] = dateStr.split("-");
-    return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+    return `${(day || '').padStart(2, '0')}.${(month || '').padStart(2, '0')}.${year || ''}`;
   };
 
   const allItems = subscriptions.reduce((acc, sub) => {
+    if (!sub.nextPayment) return acc;
     if (!acc[sub.nextPayment]) acc[sub.nextPayment] = [];
     acc[sub.nextPayment].push({ 
       id: sub.id, 
